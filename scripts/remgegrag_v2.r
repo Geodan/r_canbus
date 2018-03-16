@@ -104,3 +104,4 @@ for (cut in sort(na.omit(unique(braking$cut)))){
 }
 mtext(text = 'snelheidsafname (km/h)', side = 1, outer = T, line=2)
 mtext(text = 'remtijd (s)', side = 2, outer = T, line=2)
+

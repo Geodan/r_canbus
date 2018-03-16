@@ -8,6 +8,7 @@
 require("RPostgreSQL")
 require("ggplot2")
 require("hexbin")
+require("svglite")
 
 drv <- dbDriver("PostgreSQL")
 con <- dbConnect(drv, dbname = "research",
@@ -59,5 +60,4 @@ ggplot(data=df_postgres, aes(x=n, y=freq)) +
   labs(title="Number of speedmeasurements per GPS point", 
        x="#-measurements", y = "occurance") +
   theme_minimal()
-
 

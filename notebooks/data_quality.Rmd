@@ -1,6 +1,9 @@
 ---
 title: "Vehicles on the road"
-output: html_notebook
+output:
+  html_notebook: default
+  html_document:
+    df_print: paged
 ---
 ```{r include=FALSE}
 require("RPostgreSQL")
@@ -15,14 +18,6 @@ con <- dbConnect(drv, dbname = "research",
 
 How many unique id's are being used every day? This should give us an idea of the amount of vehicles being used. 
 ```{r echo=FALSE}
-require("RPostgreSQL")
-require("ggplot2")
-require("hexbin")
-drv <- dbDriver("PostgreSQL")
-con <- dbConnect(drv, dbname = "research",
-                 host = "localhost", port = 5433,
-                 user = "postgres")
-
 #How many unique id's are active per day
 df_postgres <- dbGetQuery(con, "
   SELECT count(DISTINCT vin) vehicles, date_trunc('day',time) date

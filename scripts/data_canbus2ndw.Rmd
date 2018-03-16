@@ -16,7 +16,11 @@ con <- dbConnect(drv, dbname = "research",
                  user = "postgres")
 
 #How many unique id's are active per day
-df_postgres <- dbGetQuery(con, "SELECT c_time, c_speed, l_speed FROM canbus.tmp_canbusndwspeed;");
+df_postgres <- dbGetQuery(con, "
+  SELECT c_time, c_speed, l_speed 
+  FROM canbus.tmp_canbusndwspeed 
+  WHERE c_time > '2017-09-14 17:00:00+02' AND c_time < '2017-09-14 18:00:00+02';
+")
 
 ggplot(df_postgres,aes(c_time)) +
   geom_line(aes(y = c_speed, color = "Canbus")) + 
