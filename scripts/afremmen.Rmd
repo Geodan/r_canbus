@@ -21,8 +21,8 @@ braking <- dbGetQuery(con, statement =
                       WITH a as (
   SELECT vin, time, value, signalid, geom
   FROM canbus.data_2017 
-  WHERE time > '2017-09-01' 
-  --WHERE vin = '03662eafcd5b8852e3663484376c027b8b7ea8b30829cae92853ba97d5d63682' 
+  WHERE time >= '2017-06-01' 
+  --WHERE vin = 'fe41054ca9a55158862afd2b06aafe74eb31900f64ba89e070adaa52555b261b' 
 ),
 
 -- remsignalen en geometrie naar RD
@@ -91,9 +91,9 @@ c as (SELECT vin, aan, v0 as v1, t_v1 FROM b4 WHERE signal = 'brakeoff')
 SELECT b4.vin, b4.aan as brakeon, b4.uit as brakeoff, b4.dt1, b4.v0, c.v1, b4.geom, b4.t_v0, c.t_v1,  EXTRACT(EPOCH FROM c.t_v1 - b4.t_v0) as dt2 FROM b4
 JOIN c ON b4.uit = c.aan and b4.vin = c.vin;")
 
-voorbeeld <- dbGetQuery(con, "
+speed <- dbGetQuery(con, "
                     SELECT value as speed, vin, time, location from canbus.data_2017
-                    WHERE signalid = 191 AND vin = '03662eafcd5b8852e3663484376c027b8b7ea8b30829cae92853ba97d5d63682'
+                    WHERE signalid = 191 AND vin = 'fe41054ca9a55158862afd2b06aafe74eb31900f64ba89e070adaa52555b261b'
                     ")
 dbDisconnect(con)
 head(braking)
@@ -109,27 +109,45 @@ Het eerstvolgende rem-uit signaal geeft einde aan van het afremmen. De laatst ge
 
 ```{r}
 # plot voor enkele auto
-a = subset(braking, braking$vin == '03662eafcd5b8852e3663484376c027b8b7ea8b30829cae92853ba97d5d63682')
-a$on = strptime(paste('1/1/2017',substr(a$brakeon, 12, 19)), format='%d/%m/%Y %H:%M:%S')
-a$off = strptime(paste('1/1/2017',substr(a$brakeoff, 12, 19)), format='%d/%m/%Y %H:%M:%S')
-voorbeeld$time2 = strptime(paste('1/1/2017',substr(voorbeeld$time, 12, 19)), format='%d/%m/%Y %H:%M:%S')
+# remdata voor deze auto
+a = subset(braking, braking$vin == 'fe41054ca9a55158862afd2b06aafe74eb31900f64ba89e070adaa52555b261b')
+
+# tijdstippen normaliseren naar 1-1-2017 zodat plotten makkelijker is
+#a$on = strptime(paste('1/1/2017',substr(a$brakeon, 12, 19)), format='%d/%m/%Y %H:%M:%S')
+#a$off = strptime(paste('1/1/2017',substr(a$brakeoff, 12, 19)), format='%d/%m/%Y %H:%M:%S')
+#a$t_v0 = strptime(paste('1/1/2017',substr(a$t_v0, 12, 19)), format='%d/%m/%Y %H:%M:%S')
+#a$t_v1 = strptime(paste('1/1/2017',substr(a$t_v1, 12, 19)), format='%d/%m/%Y %H:%M:%S')
+#speed$time2 = strptime(paste('1/1/2017',substr(speed$time, 12, 19)), format='%d/%m/%Y %H:%M:%S')
+
+# plot snelheid
+plot(speed$time, speed$speed, type='o', pch=21, cex=0.5,
+  xlim=c(as.numeric(as.POSIXct("2017-06-01 12:00:00")), as.numeric(as.POSIXct("2017-06-01 12:10:00"))), 
+  xaxt='n',
+  xlab='time (hh:mm)', 
+  ylab= 'verhicle speed (km/h)')
+
+# rechthoek van rem-aan tot rem-uit
+rect(xleft = a$brakeon, xright = a$brakeoff, ytop = 140, ybottom = 0, col=rgb(0,0,0,0.2), border = NA)
+
+# rechthoek van v0 tot v1 (snelheidsmetingen binnen remperiode)
+rect(xleft = a$t_v1, xright = a$t_v0, ybottom = a$v0, ytop = a$v1, col=rgb(1,0,0,0.4), border= NA)
+
+# legenda
+legend(x = 'topleft', 
+      legend = c('brake on-off', 'speed reduction'), 
+      fill=c('grey', 'red'), 
+      bty='n', 
+      inset=c(0,-0.15), 
+      xpd=NA, 
+      cex=0.8, 
+      border=NA)
 
 
-plot(voorbeeld$time2, voorbeeld$speed, type='o', pch=21, cex=0.4,
-  xlim=c(as.numeric(as.POSIXct("2017-01-01 15:59:00")), as.numeric(as.POSIXct("2017-01-01 16:14:00"))), xaxt='n',
-  xlab='time (hh:mm)', ylab= 'verhicle speed (km/h)')
-
-legend(x = 'topleft', legend = 'brake on-off', fill='grey', bty='n')
-
-rect(xleft = a$on, xright = a$off, ytop = 140, ybottom = 0, col=rgb(0,0,0,0.2), border = NA)
-
-r <- as.POSIXct(round(range(voorbeeld$time2), "hours"))
+# as opmaken met tijd
+r <- as.POSIXct(round(range(speed$time), "hours"))
 axis.POSIXct(1, at = seq(r[1], r[2], by = "1 min"), format = "%H:%M")
 abline(v=seq(r[1], r[2], by = "1 min"), lty=3, col='grey')
-#text(x = a$on + 0.5*(a$off-a$on), y = 130, labels = round(a$dt1,1), cex=0.6, pos=3)
-#text(x = a$on + 0.5*(a$off-a$on), y = 125, labels = round(a$dt2,1), cex=0.6, pos=3, col=2)
-#mtext(text = 'dt2', col=2, cex=0.6, side = 3, line = 0, adj=0)
-#mtext(text = 'dt1', col=1, cex=0.6, side = 3, line = 0.5, adj=0)
+
 ```
 
 Uitzetten afname in snelheid (v0-v1) als functie van remtijd (dt2), gegroepeerd op beginsnelheid (v0):
