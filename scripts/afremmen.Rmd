@@ -97,7 +97,11 @@ voorbeeld <- dbGetQuery(con, "
                     ")
 dbDisconnect(con)
 head(braking)
-
+```
+```{r}
+# plot snelheidsverschil en tijdverschil
+plot(braking$v1 - braking$v0, braking$dt1, xlim=c(-100,0), ylim=c(0,60), col=rgb(0,0,0,0.1), pch=16, cex=0.5,
+     xlab= 'delta v (km/h)', ylab = 'delta t (s)', las=1)
 ```
 
 Aan ieder rem-aan signaal is de eerstvolgende snelheidsmeting  toegevoegd: de beginsnelheid _v[0]_.
@@ -112,17 +116,20 @@ voorbeeld$time2 = strptime(paste('1/1/2017',substr(voorbeeld$time, 12, 19)), for
 
 
 plot(voorbeeld$time2, voorbeeld$speed, type='o', pch=21, cex=0.4,
-  xlim=c(as.numeric(as.POSIXct("2017-01-01 16:23:00")), as.numeric(as.POSIXct("2017-01-01 16:27:00"))), xaxt='n')
+  xlim=c(as.numeric(as.POSIXct("2017-01-01 15:59:00")), as.numeric(as.POSIXct("2017-01-01 16:14:00"))), xaxt='n',
+  xlab='time (hh:mm)', ylab= 'verhicle speed (km/h)')
+
+legend(x = 'topleft', legend = 'brake on-off', fill='grey', bty='n')
 
 rect(xleft = a$on, xright = a$off, ytop = 140, ybottom = 0, col=rgb(0,0,0,0.2), border = NA)
 
 r <- as.POSIXct(round(range(voorbeeld$time2), "hours"))
 axis.POSIXct(1, at = seq(r[1], r[2], by = "1 min"), format = "%H:%M")
 abline(v=seq(r[1], r[2], by = "1 min"), lty=3, col='grey')
-text(x = a$on + 0.5*(a$off-a$on), y = 130, labels = round(a$dt1,1), cex=0.6, pos=3)
-text(x = a$on + 0.5*(a$off-a$on), y = 125, labels = round(a$dt2,1), cex=0.6, pos=3, col=2)
-mtext(text = 'dt2', col=2, cex=0.6, side = 3, line = 0, adj=0)
-mtext(text = 'dt1', col=1, cex=0.6, side = 3, line = 0.5, adj=0)
+#text(x = a$on + 0.5*(a$off-a$on), y = 130, labels = round(a$dt1,1), cex=0.6, pos=3)
+#text(x = a$on + 0.5*(a$off-a$on), y = 125, labels = round(a$dt2,1), cex=0.6, pos=3, col=2)
+#mtext(text = 'dt2', col=2, cex=0.6, side = 3, line = 0, adj=0)
+#mtext(text = 'dt1', col=1, cex=0.6, side = 3, line = 0.5, adj=0)
 ```
 
 Uitzetten afname in snelheid (v0-v1) als functie van remtijd (dt2), gegroepeerd op beginsnelheid (v0):
